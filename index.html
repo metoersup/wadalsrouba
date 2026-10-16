@@ -18,8 +18,8 @@
   <link rel="preload" as="image" href="https://i.postimg.cc/Mp5YfQ9T/appicon.png" fetchpriority="high">
   <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
   <link rel="dns-prefetch" href="https://i.postimg.cc">
-  <link rel="preconnect" href="https://status.sd" crossorigin>
-  <link rel="dns-prefetch" href="https://status.sd">
+  <link rel="preconnect" href="https://status.sd.mustafataj.com" crossorigin>
+  <link rel="dns-prefetch" href="https://status.sd.mustafataj.com">
 
   <style>
     * {
@@ -951,9 +951,74 @@
     ::-webkit-scrollbar-track { background: #060a12; }
     ::-webkit-scrollbar-thumb { background: #1d4977; border-radius: 20px; }
     ::-webkit-scrollbar-thumb:hover { background: #2a6cb0; }
+
+    /* شاشة انتظار أنيقة وبسيطة */
+    .container { visibility: hidden; opacity: 0; transition: opacity .28s ease; }
+    body.data-loaded .container { visibility: visible; opacity: 1; }
+    .loading-screen {
+      position: fixed; inset: 0; z-index: 99999; display: flex;
+      align-items: center; justify-content: center; padding: 24px 20px 74px;
+      background: radial-gradient(ellipse at 50% 38%, rgba(0,174,255,.16), transparent 38%),
+                  radial-gradient(ellipse at 15% 90%, rgba(35,91,220,.13), transparent 42%), #050914;
+      transition: opacity .32s ease, visibility .32s ease; overflow: hidden;
+    }
+    .loading-screen::before {
+      content: ""; position: absolute; width: 270px; height: 270px; border-radius: 50%;
+      border: 1px solid rgba(63,185,255,.08); box-shadow: 0 0 0 34px rgba(63,185,255,.025), 0 0 0 68px rgba(63,185,255,.018);
+      pointer-events: none;
+    }
+    .loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loading-panel {
+      position: relative; z-index: 1; width: min(100%, 340px); padding: 36px 24px 32px;
+      text-align: center; border: 1px solid rgba(104,177,255,.18); border-radius: 30px;
+      background: linear-gradient(155deg, rgba(15,29,51,.88), rgba(7,13,27,.94));
+      box-shadow: 0 28px 90px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.055);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+    .loading-mark { position: relative; width: 112px; height: 112px; margin: 0 auto 25px; display: grid; place-items: center; }
+    .loading-mark::before, .loading-mark::after {
+      content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent;
+      border-top-color: #37c7ff; border-left-color: rgba(40,234,173,.65); animation: loadingSpin 1.5s linear infinite;
+    }
+    .loading-mark::after { inset: 8px; border-top-color: rgba(124,92,255,.9); border-left-color: transparent; border-right-color: rgba(55,199,255,.5); animation-duration: 2.2s; animation-direction: reverse; }
+    .loading-logo { width: 76px; height: 76px; border-radius: 23px; overflow: hidden; padding: 3px;
+      background: linear-gradient(145deg, rgba(55,199,255,.25), rgba(124,92,255,.18));
+      border: 1px solid rgba(100,190,255,.3); box-shadow: 0 0 32px rgba(0,145,255,.2); }
+    .loading-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 19px; display: block; }
+    .loading-title { color: #f4f8ff; font-size: 1.55rem; font-weight: 900; letter-spacing: -.3px; margin-bottom: 24px; }
+    .loading-spinner { width: 25px; height: 25px; margin: 0 auto 13px; border-radius: 50%;
+      border: 2px solid rgba(64,164,255,.15); border-top-color: #37c7ff; border-right-color: #28eaad;
+      animation: loadingSpin .8s linear infinite; }
+    @keyframes loadingSpin { to { transform: rotate(360deg); } }
+    .loading-message { color: #c8d9ef; font-size: .9rem; font-weight: 700; letter-spacing: .1px; }
+    .loading-detail { display: none; }
+    .loading-retry { display: none; margin: 18px auto 0; padding: 9px 19px; border: 1px solid rgba(55,199,255,.4);
+      border-radius: 14px; background: rgba(55,199,255,.1); color: #dff7ff; font: inherit; font-weight: 800; }
+    .loading-retry.visible { display: inline-block; }
+    .loading-footer { position: absolute; bottom: max(22px, env(safe-area-inset-bottom)); left: 12px; right: 12px;
+      text-align: center; color: #71839e; font-family: 'Cairo', sans-serif; font-size: .72rem; font-weight: 500; letter-spacing: .1px; }
+    .loading-footer::before { content: ""; display: block; width: 42px; height: 1px; margin: 0 auto 11px;
+      background: linear-gradient(90deg, transparent, rgba(55,199,255,.65), transparent); }
+    @media (max-height: 520px) { .loading-panel { padding: 20px; } .loading-mark { width: 82px; height: 82px; margin-bottom: 14px; } .loading-logo { width: 58px; height: 58px; border-radius: 18px; } .loading-title { margin-bottom: 14px; } }
+    @media (prefers-reduced-motion: reduce) { .loading-spinner, .loading-mark::before, .loading-mark::after { animation-duration: 2.5s; } }
+
   </style>
 </head>
 <body>
+
+  <div class="loading-screen" id="loadingScreen" role="status" aria-live="polite">
+    <div class="loading-panel">
+      <div class="loading-mark">
+        <div class="loading-logo"><img src="https://i.postimg.cc/Mp5YfQ9T/appicon.png" alt="شعار حالة بنكك" fetchpriority="high"></div>
+      </div>
+      <div class="loading-title">حالة بنكك</div>
+      <div class="loading-spinner" id="loadingSpinner"></div>
+      <div class="loading-message" id="loadingMessage">جاري الانتظار...</div>
+      <div class="loading-detail" id="loadingDetail"> </div>
+      <button class="loading-retry" id="loadingRetry" type="button">إعادة المحاولة</button>
+    </div>
+    <footer class="loading-footer">جميع الحقوق محفوظة © 2026</footer>
+  </div>
   <div class="container">
     <!-- الهيدر -->
     <header class="header">
@@ -1161,61 +1226,166 @@
       return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
     }
 
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const loadingDetail = document.getElementById('loadingDetail');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const loadingRetry = document.getElementById('loadingRetry');
+    let isRefreshing = false;
+    let retryTimer = null;
+    let periodicTimer = null;
+    let hasFreshData = false;
+    let retryAttempt = 0;
+
+    function showLoadingError() {
+      if (hasFreshData) return;
+      loadingSpinner.style.display = 'block';
+      loadingMessage.textContent = 'جاري الانتظار...';
+      loadingDetail.textContent = '';
+      loadingRetry.classList.remove('visible');
+    }
+
+    function revealFreshPage() {
+      hasFreshData = true;
+      document.body.classList.add('data-loaded');
+      loadingScreen.classList.add('hidden');
+      setTimeout(() => { loadingScreen.style.display = 'none'; }, 360);
+      loadingRetry.classList.remove('visible');
+    }
+
+    function normalizeStatus(value) {
+      if (value === null || value === undefined) return null;
+      const valueText = String(value).trim().toLowerCase();
+      const aliases = {
+        working: 'working', up: 'working', online: 'working', operational: 'working', ok: 'working',
+        down: 'down', offline: 'down', unavailable: 'down', stopped: 'down',
+        unstable: 'unstable', degraded: 'unstable', intermittent: 'unstable', maintenance: 'unstable'
+      };
+      return aliases[valueText] || null;
+    }
+
+    function deriveOverallStatus(androidStatus, iosStatus, suppliedStatus) {
+      const supplied = normalizeStatus(suppliedStatus);
+      if (supplied) return supplied;
+      if (androidStatus === 'working' && iosStatus === 'working') return 'working';
+      if (androidStatus === 'down' && iosStatus === 'down') return 'down';
+      if (androidStatus || iosStatus) return 'unstable';
+      return null;
+    }
+
     async function fetchData() {
+      if (isRefreshing) return false;
+      isRefreshing = true;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
       try {
-        const response = await fetch('https://status.sd/api/v1/dashboard', {
-          headers: {
-            'user-agent': 'TajSoft/StatusFlutter',
-            'accept': 'application/json'
-          }
+        const response = await fetch('https://status.sd.mustafataj.com/api/v1/dashboard', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          cache: 'no-store',
+          redirect: 'follow',
+          signal: controller.signal
         });
-        if (!response.ok) throw new Error('فشل الاتصال بالخادم');
-        const data = await response.json();
+
+        if (!response.ok) throw new Error('HTTP_' + response.status);
+
+        // Parse the body as text first; some servers return valid JSON with an unexpected content-type.
+        const responseText = await response.text();
+        if (!responseText || !responseText.trim()) throw new Error('EMPTY_RESPONSE');
+        let data;
+        try {
+          data = JSON.parse(responseText.replace(/^\uFEFF/, '').trim());
+        } catch (_) {
+          throw new Error('INVALID_JSON');
+        }
+
+        if (!data || typeof data !== 'object' || !Array.isArray(data.banks)) {
+          throw new Error('INVALID_DATA');
+        }
+
+        const bankak = data.banks.find(bank => bank && String(bank.slug || '').trim().toLowerCase() === 'bankak');
+        if (!bankak) throw new Error('BANKAK_NOT_FOUND');
+
+        // Normalize each field independently instead of rejecting the entire response
+        // because one optional status field is missing or uses an unfamiliar value.
+        const androidStatus = normalizeStatus(bankak.android);
+        const iosStatus = normalizeStatus(bankak.ios);
+        const overallStatus = deriveOverallStatus(androidStatus, iosStatus, bankak.app_status);
+
+        // Only reveal the page when at least one usable status was received.
+        if (!androidStatus && !iosStatus && !overallStatus) throw new Error('NO_USABLE_STATUS');
+
+        const safeAndroid = androidStatus || overallStatus || iosStatus;
+        const safeIos = iosStatus || overallStatus || androidStatus;
+        const safeOverall = overallStatus || deriveOverallStatus(safeAndroid, safeIos, null);
+
+        if (safeOverall) updateOverallStatus(safeOverall);
+        if (safeAndroid) updatePlatformCard('androidCard', 'androidStatusText', safeAndroid);
+        if (safeIos) updatePlatformCard('iosCard', 'iosStatusText', safeIos);
 
         if (data.updated_at) {
-          const d = new Date(data.updated_at);
-          lastUpdateEl.textContent = formatDate(d);
-        } else {
-          lastUpdateEl.textContent = formatDate(new Date());
+          const updated = new Date(data.updated_at);
+          if (!Number.isNaN(updated.getTime())) lastUpdateEl.textContent = formatDate(updated);
         }
 
-        const bankak = data.banks && data.banks.find(b => b.slug === 'bankak');
-        if (bankak) {
-          updateOverallStatus(bankak.app_status || 'unstable');
-          updatePlatformCard('androidCard', 'androidStatusText', bankak.android || 'down');
-          updatePlatformCard('iosCard', 'iosStatusText', bankak.ios || 'working');
-          // ✅ لا نُحدّث الشعار — يبقى شعار التطبيق ثابتاً
-        }
+        revealFreshPage();
         return true;
       } catch (error) {
-        console.error('خطأ في جلب البيانات:', error);
-        lastUpdateEl.textContent = formatDate(new Date());
+        // Keep technical errors out of the UI; retain them only for developer diagnostics.
+        console.warn('Bankak refresh attempt failed:', error && error.message ? error.message : error);
+        if (!hasFreshData) showLoadingError();
         return false;
+      } finally {
+        clearTimeout(timeoutId);
+        isRefreshing = false;
       }
     }
 
-    let isRefreshing = false;
+    async function initialLoadOrRetry() {
+      if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+      const success = await fetchData();
+      if (!success && !hasFreshData) {
+        // Retry progressively, without overlapping requests or bothering the user.
+        const delay = Math.min(1000 * Math.pow(2, retryAttempt), 15000);
+        retryAttempt = Math.min(retryAttempt + 1, 4);
+        retryTimer = setTimeout(initialLoadOrRetry, delay);
+      } else if (success) {
+        retryAttempt = 0;
+        if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+      }
+    }
+
     refreshBtn.addEventListener('click', async () => {
       if (isRefreshing) return;
-      isRefreshing = true;
       refreshBtn.classList.add('spinning');
-
       const success = await fetchData();
+      refreshBtn.classList.remove('spinning');
+      showToast(success ? 'تم تحديث البيانات بنجاح' : 'تعذّر التحديث، ستتم إعادة المحاولة', success ? 'fa-check-circle' : 'fa-rotate');
+      if (!success && !hasFreshData && !retryTimer) initialLoadOrRetry();
+    });
 
-      setTimeout(() => {
-        refreshBtn.classList.remove('spinning');
-        isRefreshing = false;
-        if (success) {
-          showToast('تم تحديث البيانات بنجاح', 'fa-check-circle');
-        } else {
-          showToast('تعذّر الاتصال — تم استخدام بيانات محفوظة', 'fa-triangle-exclamation');
-        }
-      }, 700);
+    loadingRetry.addEventListener('click', () => {
+      loadingSpinner.style.display = 'block';
+      loadingRetry.classList.remove('visible');
+      loadingMessage.textContent = 'جاري الانتظار...';
+      loadingDetail.textContent = '';
+      retryAttempt = 0;
+      initialLoadOrRetry();
+    });
+
+    window.addEventListener('online', () => {
+      retryAttempt = 0;
+      if (!hasFreshData) initialLoadOrRetry();
+      else fetchData();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && hasFreshData) fetchData();
     });
 
     window.addEventListener('DOMContentLoaded', () => {
-      fetchData();
-    });
+      initialLoadOrRetry();
+      periodicTimer = setInterval(() => { if (!isRefreshing) fetchData(); }, 60000);
+    }, { once: true });
 
     console.log('%cودالسروبه | Bankak Status Monitor',
       'color: #37c7ff; font-size: 16px; font-weight: bold;');
